@@ -113,6 +113,16 @@ namespace Nafanya.Handlers
             if (message.Text == null) return;
 
             Console.WriteLine($"Соощение от пользователя: {message.Text}");
+            // Проверяем, является ли это ответом на запрос PartnerID
+            if (message.ReplyToMessage != null &&
+                message.ReplyToMessage.Text != null &&
+                message.ReplyToMessage.Text.Contains("PartnerID"))
+            {
+                Console.WriteLine($"Получен входящий PartnerID: {message.Text}");
+                await _telegramService.SendPartnerStats(message.Chat.Id, message.Text);
+                return;
+            }
+
 
             // Обработка обычных команд
             switch (message.Text)
@@ -165,10 +175,7 @@ namespace Nafanya.Handlers
                     );
                     break;
             }
-            // Проверяем, является ли это ответом на запрос PartnerID
-            if (message.ReplyToMessage != null &&
-                message.ReplyToMessage.Text != null &&
-                message.ReplyToMessage.Text.Contains("PartnerID"))
+            
             {
                 Console.WriteLine($"Обработка входящего PartnerID: {message.Text}");
                 await _telegramService.SendPartnerStats(message.Chat.Id, message.Text);
