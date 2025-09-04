@@ -225,7 +225,11 @@ https://t.me/Check_for_block_abcp
                 await _botClient.SendMessage(
                     chatId: chatId,
                     text: "Введите PartnerID для получения статистики:",
-                    replyMarkup: new ForceReplyMarkup { InputFieldPlaceholder = "Например: 12345" },
+                    replyMarkup: new ForceReplyMarkup
+                    {
+                        InputFieldPlaceholder = "Например: 12345",
+                        Selective = true
+                    },
                     cancellationToken: CancellationToken.None
                 );
             }
@@ -237,7 +241,17 @@ https://t.me/Check_for_block_abcp
 
         public async Task SendPartnerStats(long chatId, string partnerId)
         {
-            if (string.IsNullOrWhiteSpace(partnerId) || !int.TryParse(partnerId, out _))
+            // Защита от текста кнопок
+            if (partnerId.Contains("Статистика по PartnerID") ||
+                partnerId.Contains("🔍") ||
+                partnerId.Contains("📊") ||
+                partnerId.Contains("🛒") ||
+                partnerId.Contains("📢"))
+            {
+                Console.WriteLine("🤖 Skipping button text processing");
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(partnerId) || !partnerId.All(char.IsDigit))
             {
                 await SendTextMessage(chatId, "❌ Неверный формат PartnerID. Введите числовой идентификатор.");
                 return;

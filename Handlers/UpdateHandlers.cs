@@ -2,6 +2,7 @@
 using Telegram.Bot.Types;
 using Nafanya.Services;
 using Nafanya.Models;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Nafanya.Handlers
 {
@@ -20,6 +21,11 @@ namespace Nafanya.Handlers
         {
             try
             {
+                if (update.Message?.From?.IsBot == true)
+                {
+                    Console.WriteLine("🤖 Skipping message from bot");
+                    return;
+                }
                 Console.WriteLine($"\nИсточник получения обновления: {update.Type}");
                 Console.WriteLine($"ID обновления: {update.Id}");
 
@@ -112,13 +118,16 @@ namespace Nafanya.Handlers
         {
             if (message.Text == null) return;
 
-            Console.WriteLine($"Соощение от пользователя: {message.Text}");
-            // Проверяем, является ли это ответом на запрос PartnerID
+            Console.WriteLine($"🎯 User message: {message.Text} from {message.From?.Username}");
+
+            // 1. СНАЧАЛА проверяем, это ответ на запрос PartnerID?
             if (message.ReplyToMessage != null &&
+                message.ReplyToMessage.From?.IsBot == true &&
                 message.ReplyToMessage.Text != null &&
-                message.ReplyToMessage.Text.Contains("PartnerID"))
+                message.ReplyToMessage.Text.Contains("PartnerID") &&
+                !message.Text.Contains("Статистика по PartnerID"))
             {
-                Console.WriteLine($"Получен входящий PartnerID: {message.Text}");
+                Console.WriteLine($"✅ Processing PartnerID input: {message.Text}");
                 await _telegramService.SendPartnerStats(message.Chat.Id, message.Text);
                 return;
             }
@@ -176,11 +185,6 @@ namespace Nafanya.Handlers
                     break;
             }
             
-            {
-                Console.WriteLine($"Обработка входящего PartnerID: {message.Text}");
-                await _telegramService.SendPartnerStats(message.Chat.Id, message.Text);
-                return;
-            }
         }
 
         public static Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
